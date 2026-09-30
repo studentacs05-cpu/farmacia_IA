@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1f5f4a" />
+  <title>Farmacia AI</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <section id="config-error" class="screen hidden">
+    <div class="auth-card">
+      <img src="assets/icon.svg" class="brand-icon" alt="" />
+      <h1>Falta configurar Supabase</h1>
+      <p>Abre <code>config.js</code> y pega la URL y la Publishable key de tu proyecto.</p>
+      <p class="muted">La guía incluida explica dónde encontrarlas.</p>
+    </div>
+  </section>
+
+  <section id="auth-screen" class="screen hidden">
+    <div class="auth-card">
+      <img src="assets/icon.svg" class="brand-icon" alt="" />
+      <h1>Farmacia AI</h1>
+      <p class="muted">Inventario, compras, caducidades y finanzas en un solo lugar.</p>
+      <div class="tabs compact">
+        <button class="tab active" data-auth-tab="login">Entrar</button>
+        <button class="tab" data-auth-tab="signup">Crear cuenta</button>
+      </div>
+      <form id="login-form" class="stack">
+        <label>Email<input type="email" id="login-email" required autocomplete="email" /></label>
+        <label>Contraseña<input type="password" id="login-password" required autocomplete="current-password" minlength="6" /></label>
+        <button class="primary" type="submit">Entrar</button>
+      </form>
+      <form id="signup-form" class="stack hidden">
+        <label>Email<input type="email" id="signup-email" required autocomplete="email" /></label>
+        <label>Contraseña<input type="password" id="signup-password" required autocomplete="new-password" minlength="6" /></label>
+        <button class="primary" type="submit">Crear cuenta</button>
+        <small class="muted">Si la confirmación por email está activada en Supabase, tendrás que confirmar antes de entrar.</small>
+      </form>
+    </div>
+  </section>
+
+  <section id="onboarding-screen" class="screen hidden">
+    <div class="auth-card wide">
+      <img src="assets/icon.svg" class="brand-icon" alt="" />
+      <h1>Conecta tu farmacia</h1>
+      <p class="muted">Crea una farmacia nueva o introduce el código de invitación de una ya existente.</p>
+      <div class="two-col">
+        <form id="create-pharmacy-form" class="panel stack">
+          <h3>Crear farmacia</h3>
+          <label>Nombre<input id="pharmacy-name" required placeholder="Farmacia San José" /></label>
+          <button class="primary" type="submit">Crear y continuar</button>
+        </form>
+        <form id="join-pharmacy-form" class="panel stack">
+          <h3>Unirme con código</h3>
+          <label>Código<input id="invite-code" required placeholder="AB12CD34" maxlength="12" /></label>
+          <button class="secondary" type="submit">Unirme</button>
+        </form>
+      </div>
+      <button id="onboarding-logout" class="link-button">Cerrar sesión</button>
+    </div>
+  </section>
+
+  <div id="app" class="app hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/icon.svg" alt="" />
+        <div><strong>Farmacia AI</strong><span id="pharmacy-label">Mi farmacia</span></div>
+      </div>
+      <nav id="nav">
+        <button data-view="dashboard" class="active">🏠 <span>Inicio</span></button>
+        <button data-view="inventory">📦 <span>Inventario</span></button>
+        <button data-view="invoices">🧾 <span>Facturas / Ingresos</span></button>
+        <button data-view="expiry">⏰ <span>Caducidades</span></button>
+        <button data-view="purchases">🛒 <span>Compras sugeridas</span></button>
+        <button data-view="finance">💰 <span>Finanzas</span></button>
+        <button data-view="reports">📊 <span>Reportes</span></button>
+        <button data-view="settings">⚙️ <span>Configuración</span></button>
+      </nav>
+      <div class="sidebar-footer"><button id="logout-btn" class="ghost">Salir</button></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="menu-btn" class="menu-btn" aria-label="Abrir menú">☰</button>
+        <div><h2 id="page-title">Inicio</h2><p id="page-subtitle">Resumen de tu farmacia</p></div>
+        <button id="refresh-btn" class="ghost">↻ Actualizar</button>
+      </header>
+
+      <section id="view-dashboard" class="view active">
+        <div id="kpi-grid" class="kpi-grid"></div>
+        <div class="grid-2">
+          <div class="panel"><div class="panel-head"><h3>Alertas</h3></div><div id="alerts-list" class="list"></div></div>
+          <div class="panel"><div class="panel-head"><h3>Actividad reciente</h3></div><div id="recent-list" class="list"></div></div>
+        </div>
+      </section>
+
+      <section id="view-inventory" class="view">
+        <div class="toolbar">
+          <input id="product-search" class="search" placeholder="Buscar producto, SKU o categoría…" />
+          <div class="toolbar-actions"><button id="new-product-btn" class="primary">+ Producto</button><button id="new-sale-btn" class="secondary">Registrar venta</button></div>
+        </div>
+        <div class="panel table-wrap"><table><thead><tr><th>Producto</th><th>SKU</th><th>Stock</th><th>Mínimo</th><th>Último costo</th><th>Proveedor</th><th></th></tr></thead><tbody id="products-body"></tbody></table></div>
+      </section>
+
+      <section id="view-invoices" class="view">
+        <div class="grid-2">
+          <form id="invoice-form" class="panel stack">
+            <div class="panel-head"><h3>Nueva factura / ingreso</h3><span class="badge">Revisión humana</span></div>
+            <div class="two-col">
+              <label>Proveedor<input id="invoice-supplier" required /></label>
+              <label>Nº factura<input id="invoice-number" /></label>
+              <label>Fecha<input type="date" id="invoice-date" required /></label>
+              <label>Total<input type="number" step="0.01" min="0" id="invoice-total" /></label>
+            </div>
+            <label>Factura (imagen o PDF)<input type="file" id="invoice-file" accept="image/*,application/pdf" /></label>
+            <div class="inline-actions"><button type="button" id="ocr-btn" class="secondary">Extraer texto de imagen</button><span id="ocr-status" class="muted small"></span></div>
+            <label>Texto OCR / notas<textarea id="invoice-ocr-text" rows="5" placeholder="El OCR es opcional. Revisa siempre los datos antes de confirmar."></textarea></label>
+            <div class="divider"></div>
+            <div class="panel-head"><h3>Productos de la factura</h3><button type="button" id="add-invoice-line" class="ghost">+ Línea</button></div>
+            <div id="invoice-lines" class="invoice-lines"></div>
+            <button class="primary" type="submit">Guardar factura e ingresar inventario</button>
+          </form>
+          <div class="panel">
+            <div class="panel-head"><h3>Facturas recientes</h3></div>
+            <div id="invoice-history" class="list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-expiry" class="view">
+        <div class="panel table-wrap"><table><thead><tr><th>Producto</th><th>Lote</th><th>Vence</th><th>Días</th><th>Cantidad restante</th><th>Valor en riesgo</th></tr></thead><tbody id="expiry-body"></tbody></table></div>
+      </section>
+
+      <section id="view-purchases" class="view">
+        <div class="notice">La sugerencia usa ventas de los últimos 30 días, stock actual, stock mínimo y días objetivo de cobertura. Es una recomendación para revisión humana.</div>
+        <div class="panel table-wrap"><table><thead><tr><th>Producto</th><th>Stock</th><th>Venta 30d</th><th>Días cobertura</th><th>Sugerencia</th><th>Proveedor habitual</th><th>Último costo</th></tr></thead><tbody id="purchase-body"></tbody></table></div>
+      </section>
+
+      <section id="view-finance" class="view">
+        <div id="finance-kpis" class="kpi-grid"></div>
+        <div class="grid-2">
+          <form id="expense-form" class="panel stack">
+            <h3>Registrar gasto</h3>
+            <div class="two-col"><label>Fecha<input type="date" id="expense-date" required /></label><label>Importe<input type="number" step="0.01" min="0" id="expense-amount" required /></label></div>
+            <label>Categoría<input id="expense-category" placeholder="Servicios, alquiler…" required /></label>
+            <label>Descripción<input id="expense-description" /></label>
+            <button class="primary" type="submit">Guardar gasto</button>
+          </form>
+          <div class="panel"><div class="panel-head"><h3>Gastos recientes</h3></div><div id="expenses-list" class="list"></div></div>
+        </div>
+      </section>
+
+      <section id="view-reports" class="view">
+        <div class="toolbar"><div><h3>Resumen operativo</h3><p class="muted">Exporta un CSV para analizarlo también en Google Sheets.</p></div><div class="toolbar-actions"><button id="export-products" class="secondary">Exportar inventario CSV</button><button id="export-sales" class="secondary">Exportar ventas CSV</button></div></div>
+        <div class="grid-2"><div class="panel"><h3>Top productos por unidades (30 días)</h3><div id="top-products" class="bars"></div></div><div class="panel"><h3>Resumen por categoría</h3><div id="category-summary" class="list"></div></div></div>
+      </section>
+
+      <section id="view-settings" class="view">
+        <div class="grid-2">
+          <div class="panel stack"><h3>Farmacia</h3><label>Nombre<input id="settings-name" disabled /></label><label>Código de invitación<input id="settings-code" readonly /></label><small class="muted">Comparte este código solamente con personas que deban acceder a los datos.</small></div>
+          <div class="panel stack"><h3>Demo</h3><p class="muted">Puedes cargar datos ficticios para probar todas las pantallas. No los cargues en una base que ya tenga datos reales.</p><button id="seed-demo-btn" class="secondary">Cargar datos de demostración</button></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="product-dialog">
+    <form id="product-form" method="dialog" class="dialog-form stack">
+      <div class="panel-head"><h3 id="product-dialog-title">Nuevo producto</h3><button type="button" class="icon-btn" data-close-dialog="product-dialog">×</button></div>
+      <input type="hidden" id="product-id" />
+      <label>Nombre<input id="product-name" required /></label>
+      <div class="two-col"><label>SKU / código<input id="product-sku" /></label><label>Categoría<input id="product-category" /></label></div>
+      <div class="three-col"><label>Unidad<input id="product-unit" value="unidad" /></label><label>Stock mínimo<input type="number" step="0.01" min="0" id="product-min-stock" value="5" /></label><label>Días objetivo<input type="number" min="1" id="product-target-days" value="14" /></label></div>
+      <label>Proveedor preferido<input id="product-preferred-supplier" /></label>
+      <div class="dialog-actions"><button type="button" class="ghost" data-close-dialog="product-dialog">Cancelar</button><button class="primary" type="submit">Guardar</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="sale-dialog">
+    <form id="sale-form" method="dialog" class="dialog-form stack">
+      <div class="panel-head"><h3>Registrar venta / salida</h3><button type="button" class="icon-btn" data-close-dialog="sale-dialog">×</button></div>
+      <label>Producto<select id="sale-product" required></select></label>
+      <div class="three-col"><label>Cantidad<input id="sale-qty" type="number" min="0.01" step="0.01" required /></label><label>Precio unitario<input id="sale-price" type="number" min="0" step="0.01" required /></label><label>Fecha<input id="sale-date" type="date" required /></label></div>
+      <label>Nota<input id="sale-note" /></label>
+      <div class="dialog-actions"><button type="button" class="ghost" data-close-dialog="sale-dialog">Cancelar</button><button class="primary" type="submit">Registrar</button></div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
