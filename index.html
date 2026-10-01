@@ -4,6 +4,16 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#173d31" />
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem('farmacia-theme') || 'light';
+        const size = localStorage.getItem('farmacia-ui-size') || 'normal';
+        document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+        document.documentElement.dataset.uiSize = size === 'large' ? 'large' : 'normal';
+      } catch (_) {}
+    })();
+  </script>
   <title>Farmacia AI</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon.svg" />
@@ -84,6 +94,7 @@
       </nav>
       <div class="sidebar-footer"><button id="logout-btn" class="ghost">Salir</button></div>
     </aside>
+    <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="Cerrar menú"></button>
 
     <main class="main">
       <header class="topbar">
@@ -165,17 +176,29 @@
           <form id="invoice-form" class="panel stack">
             <div class="panel-head"><h3>Ingreso de inventario</h3><span class="badge">Revisión humana</span></div>
             <p class="muted small">Registra aquí las facturas de proveedores. Esta sección es independiente de la facturación a clientes.</p>
+            <div class="invoice-supplier-row">
+              <label>Proveedor
+                <select id="invoice-supplier" required>
+                  <option value="">Selecciona un proveedor…</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </label>
+              <button type="button" id="new-supplier-btn" class="secondary compact-action">+ Nuevo proveedor</button>
+            </div>
             <div class="two-col">
-              <label>Proveedor<input id="invoice-supplier" required /></label>
               <label>Nº factura<input id="invoice-number" /></label>
               <label>Fecha<input type="date" id="invoice-date" required /></label>
-              <label>Total<input type="number" step="0.01" min="0" id="invoice-total" /></label>
+              <label>Total <span id="invoice-total-required" class="required-mark">*</span><input type="number" step="0.01" min="0.01" id="invoice-total" required /></label>
             </div>
-            <label>Factura (imagen o PDF)<input type="file" id="invoice-file" accept="image/*,application/pdf" /></label>
-            <div class="inline-actions"><button type="button" id="ocr-btn" class="secondary">Extraer texto de imagen</button><span id="ocr-status" class="muted small"></span></div>
-            <label>Texto OCR / notas<textarea id="invoice-ocr-text" rows="4" placeholder="El OCR es opcional. Revisa siempre los datos antes de confirmar."></textarea></label>
+            <p id="invoice-total-help" class="muted small invoice-help">El total es obligatorio para proveedores registrados. Con “Otro” es opcional.</p>
             <div class="divider"></div>
-            <div class="panel-head"><h3>Productos recibidos</h3><button type="button" id="add-invoice-line" class="ghost">+ Línea</button></div>
+            <div class="panel-head invoice-products-head">
+              <h3>Productos recibidos</h3>
+              <div class="inline-actions invoice-head-actions">
+                <button type="button" id="new-product-invoice-btn" class="secondary">+ Nuevo producto</button>
+                <button type="button" id="add-invoice-line" class="ghost">+ Línea</button>
+              </div>
+            </div>
             <div id="invoice-lines" class="invoice-lines"></div>
             <button class="primary" type="submit">Guardar e ingresar inventario</button>
           </form>
@@ -215,8 +238,25 @@
       </section>
 
       <section id="view-settings" class="view">
-        <div class="grid-2">
+        <div class="settings-grid">
           <div class="panel stack"><h3>Farmacia</h3><label>Nombre<input id="settings-name" disabled /></label><label>Código de invitación<input id="settings-code" readonly /></label><small class="muted">Comparte este código solamente con personas que deban acceder a los datos.</small></div>
+          <div class="panel stack appearance-panel">
+            <div><h3>Apariencia</h3><p class="muted small">Estos ajustes se guardan en este dispositivo.</p></div>
+            <fieldset class="segmented-field">
+              <legend>Tema</legend>
+              <div class="segmented-control" id="theme-control">
+                <button type="button" data-theme-option="light">☀️ Claro</button>
+                <button type="button" data-theme-option="dark">🌙 Oscuro</button>
+              </div>
+            </fieldset>
+            <fieldset class="segmented-field">
+              <legend>Tamaño de interfaz</legend>
+              <div class="segmented-control" id="ui-size-control">
+                <button type="button" data-ui-size-option="normal">Normal</button>
+                <button type="button" data-ui-size-option="large">Grande</button>
+              </div>
+            </fieldset>
+          </div>
           <div class="panel stack"><h3>Demo</h3><p class="muted">Puedes cargar datos ficticios en una farmacia vacía para probar el sistema.</p><button id="seed-demo-btn" class="secondary">Cargar datos de demostración</button></div>
         </div>
       </section>
@@ -235,7 +275,7 @@
     <form id="product-form" method="dialog" class="dialog-form stack">
       <div class="panel-head"><div><h3 id="product-dialog-title">Nuevo producto</h3><span class="muted small">Ficha interna del producto</span></div><button type="button" class="icon-btn" data-close-dialog="product-dialog">×</button></div>
       <input type="hidden" id="product-id" />
-      <div class="two-col"><label>Nombre<input id="product-name" required /></label><label>SKU / código interno<input id="product-sku" /></label></div>
+      <div class="two-col"><label>Nombre<input id="product-name" required /></label><label>SKU automático<input id="product-sku" readonly aria-readonly="true" /><small class="muted">Se asigna siguiendo la secuencia 00001, 00002, 00003…</small></label></div>
       <div class="two-col"><label>Categoría<input id="product-category" /></label><label>Presentación<input id="product-presentation" placeholder="Ej. caja de 20 tabletas" /></label></div>
       <div class="two-col"><label>Ícono<select id="product-icon"></select></label><label>Unidad<input id="product-unit" value="unidad" /></label></div>
       <div class="three-col"><label>Stock mínimo<input type="number" step="0.01" min="0" id="product-min-stock" value="5" /></label><label>Días objetivo<input type="number" min="1" id="product-target-days" value="14" /></label><label>Precio de venta sugerido<input type="number" step="0.01" min="0" id="product-sale-price" /></label></div>
@@ -246,6 +286,24 @@
       <label>Notas internas<textarea id="product-internal-notes" rows="2"></textarea></label>
       <div class="dialog-actions"><button type="button" class="ghost" data-close-dialog="product-dialog">Cancelar</button><button class="primary" type="submit">Guardar producto</button></div>
     </form>
+  </dialog>
+
+
+  <dialog id="supplier-dialog">
+    <form id="supplier-form" method="dialog" class="dialog-form stack">
+      <div class="panel-head"><div><h3>Nuevo proveedor</h3><span class="muted small">Quedará disponible en el menú de ingresos.</span></div><button type="button" class="icon-btn" data-close-dialog="supplier-dialog">×</button></div>
+      <label>Nombre del proveedor<input id="supplier-name" required autocomplete="organization" placeholder="Ej. Distribuidora Central" /></label>
+      <div class="dialog-actions"><button type="button" class="ghost" data-close-dialog="supplier-dialog">Cancelar</button><button class="primary" type="submit">Guardar proveedor</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="delete-product-dialog">
+    <div class="dialog-form stack">
+      <div class="panel-head"><div><h3>Eliminar producto</h3><span class="muted small">Esta acción requiere confirmación.</span></div><button type="button" class="icon-btn" data-close-dialog="delete-product-dialog">×</button></div>
+      <p id="delete-product-copy" class="confirm-copy"></p>
+      <div class="notice danger-notice">El producto dejará de aparecer en inventario y facturación. El historial de ventas e ingresos se conservará.</div>
+      <div class="dialog-actions"><button type="button" class="ghost" data-close-dialog="delete-product-dialog">Cancelar</button><button id="confirm-delete-product-btn" class="danger-button" type="button">Sí, eliminar producto</button></div>
+    </div>
   </dialog>
 
   <dialog id="product-info-dialog" class="drawer-dialog">
@@ -275,7 +333,6 @@
   </dialog>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="config.js"></script>
   <script type="module" src="js/app.js"></script>
 </body>

@@ -16,6 +16,19 @@ export class PharmacyDB{
     if(row.id){const {data,error}=await this.sb.from('products').update(row).eq('id',row.id).select().single();if(error)throw error;return data}
     const {data,error}=await this.sb.from('products').insert(row).select().single();if(error)throw error;return data;
   }
+  async archiveProduct(productId){
+    const {data,error}=await this.sb.from('products').update({active:false,updated_at:new Date().toISOString()}).eq('id',productId).select().single();
+    if(error)throw error;return data;
+  }
+
+  async suppliers(pharmacyId){
+    const {data,error}=await this.sb.from('suppliers').select('*').eq('pharmacy_id',pharmacyId).eq('active',true).order('name');
+    if(error){if(String(error.message||'').includes('suppliers'))return [];throw error}
+    return data||[];
+  }
+  async addSupplier(row){
+    const {data,error}=await this.sb.from('suppliers').insert(row).select().single();if(error)throw error;return data;
+  }
 
   async sales(pharmacyId,days=180){
     const since=new Date();since.setDate(since.getDate()-days);

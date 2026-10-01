@@ -1,7 +1,7 @@
-const CACHE = 'farmacia-ai-v2-pos';
+const CACHE = 'farmacia-ai-v2-3-ingresos';
 const ASSETS = [
   './', './index.html', './styles.css', './config.js', './manifest.webmanifest',
-  './js/app.js', './js/db.js', './js/analytics.js', './js/invoice-ocr.js', './js/product-icons.js',
+  './js/app.js', './js/db.js', './js/analytics.js', './js/product-icons.js',
   './assets/icon.svg', './assets/icon-192.png', './assets/icon-512.png'
 ];
 self.addEventListener('install', event => {
