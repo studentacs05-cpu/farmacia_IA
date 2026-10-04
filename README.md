@@ -1,63 +1,22 @@
-# Farmacia AI — demo funcional
+# Farmacia Heimar · V2.4
 
-Aplicación web ligera para una farmacia familiar. Funciona como sitio estático en **GitHub Pages** y usa **Supabase** para autenticación, base de datos y almacenamiento privado de facturas.
+PWA estática para una farmacia familiar. HTML, CSS y JavaScript vanilla; Supabase Auth/PostgreSQL con RLS y GitHub Pages. No requiere Node para operar.
 
-## Qué incluye
+Clientes opcionales con Anónimo por defecto, facturas y Excel por período, compras a crédito y pagos, ajustes auditados, caducidad de productos activos, reportes por categoría, branding Heimar azul/verde/coral. Conserva POS, FEFO, anulación de lotes originales, SKU automático, proveedores, ventas pausadas, oscuro y Normal/Grande.
 
-- Inicio de sesión con email y contraseña.
-- Una farmacia compartida por varios usuarios mediante código de invitación.
-- Inventario por producto.
-- Lotes, costo unitario, costo promedio, proveedor y fecha de vencimiento.
-- Registro de facturas e ingreso de inventario.
-- OCR local opcional para imágenes de facturas con Tesseract.js.
-- Revisión humana obligatoria antes de guardar una factura.
-- Registro de ventas/salidas con descuento de lotes por FEFO.
-- Alertas de stock mínimo y caducidad.
-- Compras sugeridas usando ventas de 30 días + stock + días objetivo.
-- Gastos y resumen financiero de 30 días.
-- Reportes por producto/categoría.
-- Exportación CSV compatible con Google Sheets.
-- PWA instalable en teléfono/tablet/PC.
-- Seguridad con Supabase Auth + Row Level Security.
-- Datos ficticios opcionales para probar el sistema.
+## Actualizar desde V2.3
 
-## Archivos importantes
+Lee `ACTUALIZAR_A_V2_4.md`: primero la nueva migración SQL y después los archivos de GitHub. Conserva tu `config.js` real. No ejecutes el esquema completo sobre la farmacia existente.
 
-- `index.html` — interfaz completa.
-- `styles.css` — diseño responsive.
-- `config.js` — URL y Publishable key de Supabase.
-- `js/app.js` — lógica de la aplicación.
-- `js/db.js` — acceso a Supabase.
-- `js/analytics.js` — métricas, compras sugeridas y CSV.
-- `js/invoice-ocr.js` — OCR de imágenes.
-- `supabase/schema.sql` — base de datos, funciones y políticas RLS.
-- `GUIA_CONFIGURACION.md` — instrucciones desde cero.
-- `manifest.webmanifest` + `sw.js` — instalación tipo app/PWA.
+## Instalación nueva
 
-## Inicio rápido
+1. Crea un proyecto Supabase y ejecuta `supabase/schema.sql`, que incluye V2.4.
+2. Copia `config.example.js` como `config.js` y completa URL y clave pública de Supabase. Nunca uses una clave secreta/service_role en frontend.
+3. Sube el contenido a la raíz del repositorio y activa GitHub Pages.
+4. Configura la URL en Supabase Auth. Crea la primera cuenta/farmacia y usa su código para unir otras cuentas.
 
-1. Crea un proyecto gratuito en Supabase.
-2. Ejecuta `supabase/schema.sql` en el SQL Editor.
-3. Copia Project URL y Publishable key a `config.js`.
-4. Sube esta carpeta a un repositorio de GitHub.
-5. Activa GitHub Pages desde `main` + `/(root)`.
-6. Abre la URL publicada, crea la primera cuenta y la farmacia.
-7. En Configuración puedes cargar datos demo para verificar que todo funciona.
+Los ZIP no incluyen `config.js` para evitar reemplazar la configuración desplegada. Los datos reales permanecen en tu Supabase.
 
-Lee **`GUIA_CONFIGURACION.md`** antes de usar datos reales.
+El campo de dosis/indicaciones continúa siendo manual. La app no genera dosis ni recomendaciones clínicas. Las facturas y números son comprobantes internos de operación.
 
-## Seguridad importante
-
-- **Nunca** pongas una `service_role`, secret key, contraseña de base de datos ni API secret en `config.js`.
-- La Publishable key (o `anon` key en proyectos antiguos) está pensada para cliente web **solo con RLS correctamente configurado**.
-- El repositorio y el HTML no deben contener facturas, datos de clientes ni otros datos privados. Los datos reales se guardan en Supabase.
-- El bucket `invoices` es privado.
-- Este demo está pensado para inventario/operación del negocio, no para almacenar historiales clínicos ni datos de pacientes.
-
-## Limitaciones del demo
-
-- El OCR solo procesa imágenes; los PDF se pueden guardar, pero sus campos se introducen manualmente.
-- El OCR no interpreta de forma fiable cada línea de cualquier factura; por eso el usuario confirma los productos antes de actualizar inventario.
-- La sugerencia de compra es una fórmula operativa sencilla, no un modelo de predicción avanzado.
-- No hay integración con WhatsApp ni con sitios web de proveedores en esta versión.
-- Para uso comercial serio conviene añadir copias de seguridad, auditoría de cambios y pruebas periódicas de permisos.
+Consulta `VALIDACION_V2_4.md` para las verificaciones realizadas y sus límites.

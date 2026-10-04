@@ -5,6 +5,8 @@ const iconMap = {
   syrup: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8h12"></path><path d="M19 8v8l-4 5v18h18V21l-4-5V8"></path><path d="M17 27h14"></path></svg>`,
   recurring: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M36 18a14 14 0 0 0-24-4"></path><path d="M12 14v-7"></path><path d="M12 14h7"></path><path d="M12 30a14 14 0 0 0 24 4"></path><path d="M36 34v7"></path><path d="M36 34h-7"></path></svg>`,
   medical_equipment: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 8v13a9 9 0 0 0 18 0V8"></path><path d="M11 8h8"></path><path d="M29 8h8"></path><path d="M24 30v5a7 7 0 0 0 14 0v-3"></path><circle cx="38" cy="28" r="4"></circle></svg>`,
+  cream: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 8h18l-3 27H18Z"></path><path d="M18 35h12v6H18Z"></path><path d="M17 17h14M21 23h6"></path></svg>`,
+  ovule: `<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 7C19 7 13 23 13 30a11 11 0 0 0 22 0C35 23 29 7 24 7Z"></path><path d="M19 29c0 5 2 7 5 7"></path></svg>`,
   other: `<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="9" y="12" width="30" height="27" rx="5"></rect><path d="M17 12V8h14v4"></path><path d="M24 20v11"></path><path d="M18.5 25.5h11"></path></svg>`
 };
 
@@ -15,6 +17,8 @@ export const PRODUCT_ICON_OPTIONS = [
   ['syrup','Jarabe'],
   ['recurring','Reposición periódica'],
   ['medical_equipment','Equipo médico'],
+  ['cream','Crema'],
+  ['ovule','Óvulo'],
   ['other','Otro']
 ];
 
