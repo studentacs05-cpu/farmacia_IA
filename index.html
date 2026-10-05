@@ -82,8 +82,8 @@
         <div><strong>Farmacia Heimar</strong><span id="pharmacy-label">Mi farmacia</span></div>
       </div>
       <nav id="nav">
-        <button data-view="dashboard" class="active">🏠 <span>Inicio</span></button>
-        <button data-view="pos" class="nav-pos">🧾 <span>Facturación</span></button>
+        <button data-view="dashboard">🏠 <span>Inicio</span></button>
+        <button data-view="pos" class="nav-pos active">🧾 <span>Ventas</span></button>
         <button data-view="sale-invoices">🧾 <span>Facturas</span></button>
         <button data-view="customers">👥 <span>Clientes</span></button>
         <button data-view="inventory">📦 <span>Inventario</span></button>
@@ -101,11 +101,11 @@
     <main class="main">
       <header class="topbar">
         <button id="menu-btn" class="menu-btn" aria-label="Abrir menú">☰</button>
-        <div><h2 id="page-title">Inicio</h2><p id="page-subtitle">Resumen de tu farmacia</p></div>
-        <button id="refresh-btn" class="ghost compact-button">↻ <span class="desktop-only">Actualizar</span></button>
+        <div><h2 id="page-title">Ventas</h2><p id="page-subtitle">Venta rápida en mostrador</p></div>
+        <button id="refresh-btn" class="ghost compact-button" aria-label="Actualizar datos">↻ <span class="desktop-only">Actualizar</span></button>
       </header>
 
-      <section id="view-dashboard" class="view active">
+      <section id="view-dashboard" class="view">
         <div id="kpi-grid" class="kpi-grid"></div>
         <div class="grid-2">
           <div class="panel"><div class="panel-head"><h3>Alertas</h3></div><div id="alerts-list" class="list"></div></div>
@@ -113,11 +113,15 @@
         </div>
       </section>
 
-      <section id="view-pos" class="view pos-view">
+      <section id="view-pos" class="view pos-view active">
+        <div class="pos-layout">
+          <div class="pos-catalog">
+            <div class="section-banner section-banner--blue catalog-heading"><span class="section-step" aria-hidden="true">1</span><div><h3>Productos para vender</h3><p>Selecciona los productos del cliente</p></div><span id="pos-catalog-count" class="section-count"></span></div>
+            <div class="pos-catalog-tools">
         <div class="pos-toolbar">
           <div class="pos-search-wrap">
             <span class="search-icon">⌕</span>
-            <input id="pos-search" class="pos-search" autocomplete="off" placeholder="Buscar producto, categoría, función…" />
+            <input id="pos-search" class="pos-search" aria-label="Buscar productos para vender" autocomplete="off" placeholder="Buscar producto, categoría, función…" />
             <kbd class="desktop-only">Ctrl K</kbd>
           </div>
           <div class="pos-toolbar-actions">
@@ -128,14 +132,13 @@
 
         <div id="pos-category-chips" class="chips" aria-label="Filtros de productos"></div>
 
-        <div class="pos-layout">
-          <div class="pos-catalog">
+            </div>
             <div id="pos-gallery" class="product-gallery"></div>
           </div>
 
           <aside id="pos-cart" class="pos-cart panel">
-            <div class="panel-head pos-cart-head">
-              <div><h3>Venta actual</h3><span id="pos-item-count" class="muted small">0 productos</span></div>
+            <div class="panel-head pos-cart-head section-banner section-banner--green">
+              <span class="section-step" aria-hidden="true">2</span><div class="banner-title"><h3>Venta actual</h3><span id="pos-item-count" class="small">0 productos</span></div>
               <button id="clear-cart-btn" class="link-button danger-text" type="button">Vaciar</button>
             </div>
             <div class="customer-sale-box">
@@ -182,8 +185,8 @@
       <section id="view-invoices" class="view">
         <div class="grid-2">
           <form id="invoice-form" class="panel stack">
-            <div class="panel-head"><h3>Ingreso de inventario</h3><span class="badge">Revisión humana</span></div>
-            <p class="muted small">Registra aquí las facturas de proveedores. Esta sección es independiente de la facturación a clientes.</p>
+            <div class="invoice-section invoice-section--data stack">
+              <div class="section-banner section-banner--blue"><span class="section-step" aria-hidden="true">1</span><div><h3>Datos de la factura</h3><p>Proveedor, importe y condición de pago</p></div></div>
             <div class="invoice-supplier-row">
               <label>Proveedor
                 <select id="invoice-supplier" required>
@@ -204,17 +207,17 @@
               <label id="invoice-cash-fields">Método de pago<select id="invoice-cash-method"><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Otro</option></select></label>
               <label id="invoice-credit-fields" class="hidden">Plazo<select id="invoice-credit-days"><option value="7">7 días</option><option value="15">15 días</option><option value="30">30 días</option><option value="60">60 días</option><option value="90">90 días</option></select><small id="invoice-due-preview"></small></label>
             </div>
-            <div class="divider"></div>
-            <div class="panel-head invoice-products-head">
-              <h3>Productos recibidos</h3>
+            </div>
+            <div class="invoice-section invoice-section--products stack">
+              <div class="section-banner section-banner--green"><span class="section-step" aria-hidden="true">2</span><div><h3>Productos recibidos</h3><p>Cantidades, costos y caducidades</p></div></div>
               <div class="inline-actions invoice-head-actions">
                 <button type="button" id="new-product-invoice-btn" class="secondary">+ Nuevo producto</button>
                 <button type="button" id="add-invoice-line" class="ghost">+ Línea</button>
               </div>
-            </div>
             <div id="invoice-lines" class="invoice-lines"></div>
             <div id="invoice-total-check" class="total-check" aria-live="polite"></div>
             <button class="primary" type="submit">Guardar e ingresar inventario</button>
+            </div>
           </form>
           <div class="panel">
             <div class="panel-head"><h3>Facturas de proveedor recientes</h3></div>
@@ -297,8 +300,8 @@
     </main>
 
     <nav id="mobile-nav" class="mobile-nav" aria-label="Navegación principal">
-      <button data-view="dashboard" class="active"><span>⌂</span>Inicio</button>
-      <button data-view="pos" class="mobile-sell"><span>＋</span>Vender</button>
+      <button data-view="dashboard"><span>⌂</span>Inicio</button>
+      <button data-view="pos" class="mobile-sell active"><span>＋</span>Vender</button>
       <button data-view="inventory"><span>▣</span>Inventario</button>
       <button data-view="invoices"><span>⇩</span>Ingresos</button>
       <button id="mobile-more-btn"><span>•••</span>Más</button>

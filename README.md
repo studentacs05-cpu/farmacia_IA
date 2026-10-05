@@ -1,8 +1,12 @@
-# Farmacia Heimar · V2.4
+# Farmacia Heimar · V2.4.1
 
 PWA estática para una farmacia familiar. HTML, CSS y JavaScript vanilla; Supabase Auth/PostgreSQL con RLS y GitHub Pages. No requiere Node para operar.
 
 Clientes opcionales con Anónimo por defecto, facturas y Excel por período, compras a crédito y pagos, ajustes auditados, caducidad de productos activos, reportes por categoría, branding Heimar azul/verde/coral. Conserva POS, FEFO, anulación de lotes originales, SKU automático, proveedores, ventas pausadas, oscuro y Normal/Grande.
+
+## Actualizar desde V2.4
+
+Lee `ACTUALIZAR_A_V2_4_1.md`. Esta revisión de interfaz abre Ventas por defecto, distingue catálogo/carrito y datos/productos en Ingresos, y compacta las acciones de Inventario. No requiere SQL. Conserva tu `config.js`.
 
 ## Actualizar desde V2.3
 
@@ -19,4 +23,4 @@ Los ZIP no incluyen `config.js` para evitar reemplazar la configuración despleg
 
 El campo de dosis/indicaciones continúa siendo manual. La app no genera dosis ni recomendaciones clínicas. Las facturas y números son comprobantes internos de operación.
 
-Consulta `VALIDACION_V2_4.md` para las verificaciones realizadas y sus límites.
+Consulta `VALIDACION_UI_V2_4_1.md` y `VALIDACION_V2_4.md` para las verificaciones realizadas y sus límites.

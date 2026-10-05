@@ -92,7 +92,7 @@ function bindStaticEvents(){
   $('#mobile-cart-jump').addEventListener('click',()=>{
     const cart=$('#pos-cart'),jump=$('#mobile-cart-jump');if(!cart)return;
     jump.classList.add('hidden');
-    const offset=isMobile()?72:18;const top=Math.max(0,cart.getBoundingClientRect().top+window.scrollY-offset);
+    const offset=isMobile()?($('.topbar').getBoundingClientRect().height+12):18;const top=Math.max(0,cart.getBoundingClientRect().top+window.scrollY-offset);
     window.scrollTo({top,behavior:'smooth'});setTimeout(updateMobileCartJumpVisibility,650);
   });
   window.addEventListener('scroll',updateMobileCartJumpVisibility,{passive:true});window.addEventListener('resize',updateMobileCartJumpVisibility);
@@ -100,6 +100,7 @@ function bindStaticEvents(){
 
   $('#add-invoice-line').addEventListener('click',()=>{state.invoiceRequestId=null;addInvoiceLine()});$('#invoice-form').addEventListener('submit',saveInvoice);$('#invoice-supplier').addEventListener('change',updateInvoiceTotalRequirement);$('#new-supplier-btn').addEventListener('click',openSupplierDialog);$('#supplier-form').addEventListener('submit',saveSupplier);$('#confirm-delete-product-btn').addEventListener('click',confirmDeleteProduct);
   bindV24Events();
+  bindUIRefinements();
   $('#expense-form').addEventListener('submit',saveExpense);$('#export-products').addEventListener('click',exportProducts);$('#export-sales').addEventListener('click',exportSales);$('#seed-demo-btn').addEventListener('click',seedDemo);
 
   document.addEventListener('keydown',e=>{
@@ -114,9 +115,10 @@ async function routeSession(){
   if(!state.session){state.member=null;state.pharmacy=null;state.customers=[];state.customerStats=[];state.facturas=[];state.facturasLoaded=false;clearCart(false);showOnly('#auth-screen');return}
   try{
     const member=await db.membership();if(!member){showOnly('#onboarding-screen');return}
+    const enteringPharmacy=!state.pharmacy||state.pharmacy.id!==member.pharmacies.id;
     state.member=member;state.pharmacy=member.pharmacies;
     $('#pharmacy-label').textContent=state.pharmacy.name;$('#settings-name').value=state.pharmacy.name;$('#settings-code').value=state.pharmacy.invite_code;
-    showOnly('#app');await refreshAll();updateHeldCount();
+    showOnly('#app');if(enteringPharmacy)openView('pos');await refreshAll();updateHeldCount();
   }catch(e){toast(e.message,true)}
 }
 
@@ -128,7 +130,7 @@ async function joinPharmacy(e){e.preventDefault();try{await db.joinPharmacy($('#
 function openView(name){
   $$('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));
   $$('#nav button[data-view],#mobile-nav button[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));
-  const titles={dashboard:['Inicio','Resumen de tu farmacia'],pos:['Facturación','Venta rápida en mostrador'],inventory:['Inventario','Productos, precios y ubicación'],invoices:['Ingresos / Proveedores','Facturas de proveedor y nuevos lotes'],expiry:['Caducidades','Prioriza los lotes que vencen primero'],purchases:['Compras sugeridas','Reposición basada en demanda y stock'],finance:['Finanzas','Ventas, costos y gastos'],reports:['Reportes','Análisis y exportación'],'sale-invoices':['Facturas','Historial y detalle de ventas'],customers:['Clientes','Compras e información de tus clientes'],settings:['Configuración','Acceso y datos de demostración']};
+  const titles={dashboard:['Inicio','Resumen de tu farmacia'],pos:['Ventas','Venta rápida en mostrador'],inventory:['Inventario','Productos, precios y ubicación'],invoices:['Ingresos / Proveedores','Facturas de proveedor y nuevos lotes'],expiry:['Caducidades','Prioriza los lotes que vencen primero'],purchases:['Compras sugeridas','Reposición basada en demanda y stock'],finance:['Finanzas','Ventas, costos y gastos'],reports:['Reportes','Análisis y exportación'],'sale-invoices':['Facturas','Historial y detalle de ventas'],customers:['Clientes','Compras e información de tus clientes'],settings:['Configuración','Acceso y datos de demostración']};
   $('#page-title').textContent=titles[name]?.[0]||'';$('#page-subtitle').textContent=titles[name]?.[1]||'';closeSidebar();
   if(name==='sale-invoices'&&!state.facturasLoaded)loadFacturas();
   if(name==='pos'){renderPos();if(!isMobile())setTimeout(()=>$('#pos-search').focus(),80)}
@@ -169,11 +171,11 @@ function renderProducts(){
   const q=$('#product-search').value?.trim().toLowerCase()||'';
   const rows=state.products.filter(p=>[p.name,p.sku,p.category,p.presentation,p.function_info,shelfLabel(p)].some(v=>String(v||'').toLowerCase().includes(q)));
   $('#products-body').innerHTML=rows.map(p=>`<tr><td><div class="product-name-cell"><span class="mini-product-icon">${productIconSVG(p.product_icon)}</span><div><strong>${esc(p.name)}</strong><span class="muted small">${esc(p.category||'Sin categoría')}</span></div></div></td><td>${esc(p.sku||'—')}</td><td class="${Number(p.current_stock)<=Number(p.min_stock)?'stock-low':''}">${num(p.current_stock)} ${esc(p.unit)}</td><td>${num(p.min_stock)}</td><td>${money(p.suggested_sale_price,currency)}</td><td>${esc(shelfLabel(p))}</td><td>${esc(p.preferred_supplier||p.last_supplier||'—')}</td><td><div class="row-actions"><button class="ghost info-product" data-id="${p.id}">ⓘ</button><button class="secondary adjust-product" data-id="${p.id}">Ajustar stock</button><button class="ghost edit-product" data-id="${p.id}">Editar</button><button class="danger-ghost delete-product" data-id="${p.id}">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="8"><div class="empty">No hay productos.</div></td></tr>';
-  $('#inventory-cards').innerHTML=rows.map(p=>`<article class="inventory-card"><div class="inventory-card-top"><span class="product-icon">${productIconSVG(p.product_icon)}</span><div><strong>${esc(p.name)}</strong><span>${esc(p.category||'Sin categoría')} · SKU ${esc(p.sku||'—')}</span></div></div><div class="inventory-card-grid"><span>Stock <b class="${Number(p.current_stock)<=Number(p.min_stock)?'danger-text':''}">${num(p.current_stock)}</b></span><span>Venta <b>${money(p.suggested_sale_price,currency)}</b></span><span class="wide">📍 ${esc(shelfLabel(p))}</span></div><div class="inventory-card-actions"><button class="secondary info-product" data-id="${p.id}">Ver ficha</button><button class="secondary adjust-product" data-id="${p.id}">Ajustar stock</button><button class="ghost edit-product" data-id="${p.id}">Editar</button><button class="danger-ghost delete-product" data-id="${p.id}">Eliminar</button></div></article>`).join('')||'<div class="empty">No hay productos.</div>';
+  $('#inventory-cards').innerHTML=rows.map(p=>`<article class="inventory-card"><div class="inventory-card-top"><span class="product-icon">${productIconSVG(p.product_icon)}</span><div><strong>${esc(p.name)}</strong><span>${esc(p.category||'Sin categoría')} · SKU ${esc(p.sku||'—')}</span></div></div><div class="inventory-card-grid"><span>Stock <b class="${Number(p.current_stock)<=Number(p.min_stock)?'danger-text':''}">${num(p.current_stock)}</b></span><span>Venta <b>${money(p.suggested_sale_price,currency)}</b></span><span class="wide">📍 ${esc(shelfLabel(p))}</span></div><div class="inventory-card-actions"><button class="secondary info-product" data-id="${p.id}">Ver ficha</button><button class="secondary adjust-product" data-id="${p.id}">Ajustar stock</button><details class="inventory-more"><summary aria-label="Más opciones de ${esc(p.name)}">Más ⋯</summary><div class="inventory-more-menu"><button class="ghost edit-product" data-id="${p.id}">Editar</button><button class="danger-ghost delete-product" data-id="${p.id}">Eliminar</button></div></details></div></article>`).join('')||'<div class="empty">No hay productos.</div>';
   $$('.adjust-product').forEach(b=>b.addEventListener('click',()=>openAdjustStock(b.dataset.id)));
-  $$('.edit-product').forEach(b=>b.addEventListener('click',()=>openProductDialog(productById(b.dataset.id))));
+  $$('.edit-product').forEach(b=>b.addEventListener('click',()=>{closeInventoryMenus();openProductDialog(productById(b.dataset.id))}));
   $$('.info-product').forEach(b=>b.addEventListener('click',()=>openProductInfo(b.dataset.id)));
-  $$('.delete-product').forEach(b=>b.addEventListener('click',()=>openDeleteProductDialog(b.dataset.id)));
+  $$('.delete-product').forEach(b=>b.addEventListener('click',()=>{closeInventoryMenus();openDeleteProductDialog(b.dataset.id)}));
 }
 function refreshUpsellSelect(excludeId=''){
   $('#product-upsell').innerHTML='<option value="">Ninguno</option>'+state.products.filter(p=>p.id!==excludeId).map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join('');
@@ -225,6 +227,7 @@ function getFilteredPosProducts(){
 }
 function renderPosGallery(){
   const rows=getFilteredPosProducts();
+  $('#pos-catalog-count').textContent=`${rows.length} ${rows.length===1?'producto':'productos'}`;
   $('#pos-gallery').innerHTML=rows.map(p=>`<article class="product-card ${Number(p.current_stock)<=0?'out-of-stock':''}" data-id="${p.id}"><button class="product-card-info" data-info-id="${p.id}" aria-label="Ver información">ⓘ</button><button class="product-card-main" data-add-id="${p.id}" ${Number(p.current_stock)<=0?'disabled':''}><span class="product-icon">${productIconSVG(p.product_icon)}</span><span class="product-card-name">${esc(p.name)}</span><span class="product-card-meta">${esc(p.presentation||p.category||'')}</span><span class="product-card-bottom"><strong>${money(p.suggested_sale_price,currency)}</strong><small class="${Number(p.current_stock)<=Number(p.min_stock)?'danger-text':''}">Stock ${num(p.current_stock)}</small></span></button></article>`).join('')||'<div class="empty gallery-empty">No encontré productos con ese filtro.</div>';
   $$('[data-add-id]').forEach(b=>b.addEventListener('click',()=>addToCart(b.dataset.addId)));
   $$('[data-info-id]').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();openProductInfo(b.dataset.infoId)}));
@@ -542,4 +545,15 @@ async function exportFacturas(){
     const lines=rows.flatMap(t=>(t.sales||[]).map(s=>({Factura:t.invoice_number||t.id,Fecha:t.sold_at,Cliente:t.customer_name_snapshot||'Anónimo',Estado:t.status==='voided'?'Anulada':'Completada',Producto:s.product_name_snapshot||s.products?.name||'Producto',Categoria:s.category_snapshot||s.products?.category||'',Cantidad:Number(s.quantity),Precio_unitario:Number(s.unit_price),Importe_linea:Number(s.quantity)*Number(s.unit_price)})));
     xlsxDownload(`facturas-${state.facturasPeriod.from}-${state.facturasPeriod.to}.xlsx`,[{name:'Facturas',rows:invoices},{name:'Productos',rows:lines}]);toast('Excel descargado');
   }catch(err){toast(err.message,true)}finally{btn.disabled=false}
+}
+
+
+// V2.4.1 · Ajustes de interfaz sobre la lógica V2.4 existente.
+function closeInventoryMenus(){document.querySelectorAll('.inventory-more[open]').forEach(el=>el.open=false)}
+function syncTopbarHeight(){const bar=$('.topbar');if(bar)document.documentElement.style.setProperty('--topbar-height',`${Math.ceil(bar.getBoundingClientRect().height)}px`)}
+function bindUIRefinements(){
+  if('ResizeObserver' in window)new ResizeObserver(syncTopbarHeight).observe($('.topbar'));
+  window.addEventListener('resize',syncTopbarHeight,{passive:true});syncTopbarHeight();
+  document.addEventListener('click',e=>document.querySelectorAll('.inventory-more[open]').forEach(el=>{if(!el.contains(e.target))el.open=false}));
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeInventoryMenus()});
 }

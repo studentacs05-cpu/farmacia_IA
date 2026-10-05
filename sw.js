@@ -1,4 +1,4 @@
-const CACHE='farmacia-heimar-v2-4';
+const CACHE='farmacia-heimar-v2-4-1-ui';
 const ASSETS=['./','./index.html','./styles.css','./config.js','./manifest.webmanifest','./js/app.js','./js/db.js','./js/analytics.js','./js/product-icons.js','./js/excel.js','./assets/heimar-logo.png','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install',event=>{self.skipWaiting();event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)))});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>(k.startsWith('farmacia-ai-')||k.startsWith('farmacia-heimar-'))&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]))});
